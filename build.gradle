@@ -33,6 +33,10 @@ dependencies {
 	modImplementation "com.terraformersmc:modmenu:${modmenu_version}"
 }
 
+loom {
+	accessWidenerPath = file("src/main/resources/${archives_base_name}.accesswidener")
+}
+
 compileJava {
 	options.encoding = "UTF-8"
 	sourceCompatibility = targetCompatibility = project.java_version
@@ -63,8 +67,8 @@ spotless {
 
 	java {
 		importOrder()
-		removeUnusedImports()
-		googleJavaFormat()
+		// removeUnusedImports()
+		// googleJavaFormat()
 
 		licenseHeader "/* ${expand_license(license_header)} */\n\n"
 	}
