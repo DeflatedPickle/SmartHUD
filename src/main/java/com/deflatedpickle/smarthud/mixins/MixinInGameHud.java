@@ -57,6 +57,6 @@ abstract public class MixinInGameHud {
             int x,
             int y
     ) {
-        SmartHUDReheated.INSTANCE.drawSmartHUDItems((InGameHud) (Object) this, y, playerEntity, partialTicks, seed);
+        SmartHUDReheated.INSTANCE.drawSmartHUDItems((InGameHud) (Object) this, playerEntity, partialTicks, seed);
     }
 }
