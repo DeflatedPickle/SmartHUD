@@ -10,11 +10,13 @@ import com.deflatedpickle.smarthud.api.Vertical
 import com.deflatedpickle.smarthud.impl.Position
 import com.deflatedpickle.smarthud.util.getSlotWithItem
 import net.fabricmc.api.ClientModInitializer
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.hud.InGameHud
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.Items
+import net.minecraft.util.Arm
 
 @Suppress("UNUSED")
 object SmartHUDReheated : ClientModInitializer {
@@ -39,7 +41,7 @@ object SmartHUDReheated : ClientModInitializer {
                 vertical = Vertical.BOTTOM
             ),
             ORIENTATION to Orientation.HORIZONTAL,
-            OFFSET to Pair(182 / 2 + 10, 0),
+            OFFSET to Pair(182 / 2 + 7, 0),
             ITEMS to mutableListOf(
                 Items.CLOCK,
                 Items.COMPASS,
@@ -57,42 +59,50 @@ object SmartHUDReheated : ClientModInitializer {
 
     fun drawSection(inGameHud: InGameHud, drawFunc: (Int, Int, Int, Item) -> Unit) {
         if (enabled) {
-            for (s in sections) {
-                val p = s[POSITION] as Position
-                val or = s[ORIENTATION] as Orientation
-                val o = s[OFFSET] as Pair<Int, Int>
-                val l = (s[ITEMS] as List<Item>).size
+            MinecraftClient.getInstance().player?.let { player ->
+                for (s in sections) {
+                    val p = s[POSITION] as Position
+                    val or = s[ORIENTATION] as Orientation
+                    val o = s[OFFSET] as Pair<Int, Int>
+                    val l = (s[ITEMS] as List<Item>).size
 
-                val x = when (p.horizontal) {
-                    Horizontal.LEFT -> 0
-                    Horizontal.CENTRE -> (inGameHud.scaledWidth / 2)
-                    Horizontal.RIGHT -> when (or) {
-                        Orientation.HORIZONTAL -> inGameHud.scaledWidth - SIZE
-                        Orientation.VERTICAL -> inGameHud.scaledWidth - SIZE * l
-                    }
-                }
-
-                val y = when (p.vertical) {
-                    Vertical.TOP -> 0
-                    Vertical.CENTER -> (inGameHud.scaledHeight / 2)
-                    Vertical.BOTTOM -> when (or) {
-                        Orientation.HORIZONTAL -> inGameHud.scaledHeight - SIZE
-                        Orientation.VERTICAL -> inGameHud.scaledHeight - SIZE * l
-                    }
-                }
-
-                for ((i, stack) in (s[ITEMS] as List<Item>).withIndex()) {
-                    val x2 = when (or) {
-                        Orientation.HORIZONTAL -> x + o.first + (SIZE - 1) * i
-                        Orientation.VERTICAL -> x + o.first
+                    val x = when (p.horizontal) {
+                        Horizontal.LEFT -> 0
+                        Horizontal.CENTRE -> (inGameHud.scaledWidth / 2)
+                        Horizontal.RIGHT -> when (or) {
+                            Orientation.HORIZONTAL -> inGameHud.scaledWidth - SIZE
+                            Orientation.VERTICAL -> inGameHud.scaledWidth - SIZE * l
+                        }
                     }
 
-                    val y2 = when (or) {
-                        Orientation.HORIZONTAL -> y + o.second
-                        Orientation.VERTICAL -> y + o.second + (SIZE - 1) * i
+                    val y = when (p.vertical) {
+                        Vertical.TOP -> 0
+                        Vertical.CENTER -> (inGameHud.scaledHeight / 2)
+                        Vertical.BOTTOM -> when (or) {
+                            Orientation.HORIZONTAL -> inGameHud.scaledHeight - SIZE
+                            Orientation.VERTICAL -> inGameHud.scaledHeight - SIZE * l
+                        }
                     }
 
-                    drawFunc(x2, y2, i, stack)
+                    for ((i, stack) in (s[ITEMS] as List<Item>).withIndex()) {
+                        val x2 = when (or) {
+                            Orientation.HORIZONTAL -> x + o.first + (SIZE - 1) * i
+                            Orientation.VERTICAL -> x + o.first
+                        }
+
+                        val y2 = when (or) {
+                            Orientation.HORIZONTAL -> y + o.second
+                            Orientation.VERTICAL -> y + o.second + (SIZE - 1) * i
+                        }
+
+                        drawFunc(
+                            when (player.mainArm) {
+                                Arm.LEFT -> inGameHud.scaledWidth - SIZE - 1 + x2 * -1
+                                else -> x2
+                            },
+                            y2, i, stack
+                        )
+                    }
                 }
             }
         }
