@@ -5,6 +5,7 @@
 package com.deflatedpickle.smarthud
 
 import com.deflatedpickle.smarthud.api.Horizontal
+import com.deflatedpickle.smarthud.api.Inventory
 import com.deflatedpickle.smarthud.api.Orientation
 import com.deflatedpickle.smarthud.api.Towards
 import com.deflatedpickle.smarthud.api.Vertical
@@ -19,10 +20,12 @@ import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ArrowItem
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Arm
 import net.minecraft.util.Hand
+import net.minecraft.util.collection.DefaultedList
 
 @Suppress("UNUSED")
 object SmartHUDReheated : ClientModInitializer {
@@ -42,6 +45,7 @@ object SmartHUDReheated : ClientModInitializer {
     const val SIZE = 22
 
     private val sections = listOf(
+        // Navigation/Time
         Section(
             position = Position(
                 vertical = Vertical.BOTTOM,
@@ -52,6 +56,7 @@ object SmartHUDReheated : ClientModInitializer {
                 { it.item == Items.COMPASS },
             )
         ),
+        // Elytra
         Section(
             position = Position(
                 vertical = Vertical.BOTTOM,
@@ -68,7 +73,11 @@ object SmartHUDReheated : ClientModInitializer {
                 player.armorItems.any { it.item == Items.ELYTRA }
             },
             towards = Towards.LEFT,
+            inventories = listOf(
+                Inventory.ARMOUR,
+            ),
         ),
+        // Arrows
         Section(
             position = Position(
                 vertical = Vertical.BOTTOM,
@@ -83,7 +92,9 @@ object SmartHUDReheated : ClientModInitializer {
                 offset = Pair(0, -SIZE + 1),
             ),
             towards = Towards.LEFT,
+            limit = -1,
         ),
+        // Armour
         Section(
             position = Position(
                 horizontal = Horizontal.RIGHT,
@@ -94,6 +105,10 @@ object SmartHUDReheated : ClientModInitializer {
                 { it.item is ArmorItem && (it.item as ArmorItem).slotType == EquipmentSlot.CHEST },
                 { it.item is ArmorItem && (it.item as ArmorItem).slotType == EquipmentSlot.LEGS },
                 { it.item is ArmorItem && (it.item as ArmorItem).slotType == EquipmentSlot.FEET },
+            ),
+            towards = Towards.LEFT,
+            inventories = listOf(
+                Inventory.ARMOUR,
             ),
         )
     )
@@ -146,10 +161,28 @@ object SmartHUDReheated : ClientModInitializer {
                     var collectedWidth = 0
                     var collectedHeight = 0
 
-                    for (inventory in player.inventory.combinedInventory) {
+                    val collectedKinds = mutableMapOf<Item, Int>()
+
+                    val inventories = mutableListOf<DefaultedList<ItemStack>>().apply {
+                        for (i in s.inventories) {
+                            add(
+                                when (i) {
+                                    Inventory.MAIN -> player.inventory.main
+                                    Inventory.ARMOUR -> player.inventory.armor
+                                    Inventory.OFFHAND -> player.inventory.offHand
+                                }
+                            )
+                        }
+                    }
+
+                    for (inventory in inventories) {
                         for ((i, stack) in inventory.withIndex()) {
                             for (item in items) {
                                 if (!item(stack)) continue
+                                collectedKinds.putIfAbsent(stack.item, 0)
+                                if (s.limit != -1 && collectedKinds[stack.item]!! >= s.limit) continue
+
+                                collectedKinds[stack.item] = collectedKinds[stack.item]!! + 1
 
                                 val x2 = when (or) {
                                     Orientation.HORIZONTAL -> x + o.first + collectedWidth.apply { collectedWidth += SIZE - 1 } * towards.direction

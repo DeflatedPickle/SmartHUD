@@ -2,6 +2,7 @@
 
 package com.deflatedpickle.smarthud.impl
 
+import com.deflatedpickle.smarthud.api.Inventory
 import com.deflatedpickle.smarthud.api.Orientation
 import com.deflatedpickle.smarthud.api.Towards
 import net.minecraft.entity.player.PlayerEntity
@@ -15,4 +16,6 @@ data class Section(
     val dodge: Dodge = Dodge(),
     val show: (PlayerEntity) -> Boolean = { true },
     val towards: Towards = Towards.RIGHT,
+    val limit: Int = 1,
+    val inventories: List<Inventory> = listOf(Inventory.MAIN),
 )
