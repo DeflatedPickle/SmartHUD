@@ -179,6 +179,7 @@ object SmartHUDReheated : ClientModInitializer {
                                 if (!item(stack)) continue
                                 collectedKinds.putIfAbsent(stack.item, 0)
                                 if (s.limit != -1 && collectedKinds[stack.item]!! >= s.limit) continue
+                                if (inventory.size == 36 && inventory.indexOf(stack) <= 9) continue
 
                                 collectedKinds[stack.item] = collectedKinds[stack.item]!! + 1
 
