@@ -2,8 +2,8 @@
 
 package com.deflatedpickle.smarthud.api
 
-enum class Vertical {
-    TOP,
-    CENTER,
-    BOTTOM,
+enum class Alignment {
+    START,
+    CENTRE,
+    END,
 }

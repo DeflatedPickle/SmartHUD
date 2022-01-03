@@ -4,11 +4,10 @@
 
 package com.deflatedpickle.smarthud
 
-import com.deflatedpickle.smarthud.api.Horizontal
+import com.deflatedpickle.smarthud.api.Alignment
 import com.deflatedpickle.smarthud.api.Inventory
 import com.deflatedpickle.smarthud.api.Orientation
 import com.deflatedpickle.smarthud.api.Towards
-import com.deflatedpickle.smarthud.api.Vertical
 import com.deflatedpickle.smarthud.impl.Dodge
 import com.deflatedpickle.smarthud.impl.Position
 import com.deflatedpickle.smarthud.impl.Section
@@ -48,7 +47,7 @@ object SmartHUDReheated : ClientModInitializer {
         // Navigation/Time
         Section(
             position = Position(
-                vertical = Vertical.BOTTOM,
+                vertical = Alignment.END,
             ),
             offset = Pair(182 / 2 + SIZE / 2 + 7, 0),
             items = listOf(
@@ -56,38 +55,32 @@ object SmartHUDReheated : ClientModInitializer {
                 { it.item == Items.COMPASS },
             )
         ),
-        // Elytra
+        // Rockets
         Section(
             position = Position(
-                vertical = Vertical.BOTTOM,
+                vertical = Alignment.END,
             ),
             offset = Pair(-182 / 2 - SIZE / 2 - 7, 0),
-            items = listOf { it.item == Items.ELYTRA },
+            items = listOf { it.item == Items.FIREWORK_ROCKET },
             dodge = Dodge(
                 upon = {
                     it.getStackInHand(Hand.OFF_HAND).item != Items.AIR
                 },
                 offset = Pair(-SIZE + 1, 0),
             ),
-            show = { player ->
-                player.armorItems.any { it.item == Items.ELYTRA }
-            },
             towards = Towards.LEFT,
-            inventories = listOf(
-                Inventory.ARMOUR,
-            ),
         ),
         // Arrows
         Section(
             position = Position(
-                vertical = Vertical.BOTTOM,
+                vertical = Alignment.END,
             ),
             offset = Pair(-182 / 2 - SIZE / 2 - 7, 0),
             items = listOf { it.item is ArrowItem },
             dodge = Dodge(
                 upon = { player ->
                     player.getStackInHand(Hand.OFF_HAND).item != Items.AIR ||
-                        player.armorItems.any { it.item == Items.ELYTRA }
+                        player.inventory.main.any { it.item == Items.FIREWORK_ROCKET }
                 },
                 offset = Pair(0, -SIZE + 1),
             ),
@@ -97,20 +90,25 @@ object SmartHUDReheated : ClientModInitializer {
         // Armour
         Section(
             position = Position(
-                horizontal = Horizontal.RIGHT,
+                vertical = Alignment.END,
             ),
-            orientation = Orientation.VERTICAL,
+            offset = Pair(182 / 2 + SIZE / 2 + 7, 0),
             items = listOf(
                 { it.item is ArmorItem && (it.item as ArmorItem).slotType == EquipmentSlot.HEAD },
-                { it.item is ArmorItem && (it.item as ArmorItem).slotType == EquipmentSlot.CHEST },
+                { it.item == Items.ELYTRA || it.item is ArmorItem && (it.item as ArmorItem).slotType == EquipmentSlot.CHEST },
                 { it.item is ArmorItem && (it.item as ArmorItem).slotType == EquipmentSlot.LEGS },
                 { it.item is ArmorItem && (it.item as ArmorItem).slotType == EquipmentSlot.FEET },
             ),
-            towards = Towards.LEFT,
+            dodge = Dodge(
+                upon = { player ->
+                    player.inventory.main.any { it.item == Items.CLOCK || it.item == Items.COMPASS }
+                },
+                offset = Pair(0, -SIZE + 1),
+            ),
             inventories = listOf(
                 Inventory.ARMOUR,
             ),
-        )
+        ),
     )
 
     var enabled = true
@@ -136,18 +134,18 @@ object SmartHUDReheated : ClientModInitializer {
                     if (!s.show(player)) continue
 
                     var x = when (pos.horizontal) {
-                        Horizontal.LEFT -> 0
-                        Horizontal.CENTRE -> (inGameHud.scaledWidth / 2) - (SIZE / 2)
-                        Horizontal.RIGHT -> when (or) {
+                        Alignment.START -> 0
+                        Alignment.CENTRE -> (inGameHud.scaledWidth / 2) - (SIZE / 2)
+                        Alignment.END -> when (or) {
                             Orientation.HORIZONTAL -> inGameHud.scaledWidth - SIZE * count
                             Orientation.VERTICAL -> inGameHud.scaledWidth - SIZE
                         }
                     }
 
                     var y = when (pos.vertical) {
-                        Vertical.TOP -> 0
-                        Vertical.CENTER -> (inGameHud.scaledHeight / 2) - (SIZE / 2)
-                        Vertical.BOTTOM -> when (or) {
+                        Alignment.START -> 0
+                        Alignment.CENTRE -> (inGameHud.scaledHeight / 2) - (SIZE / 2)
+                        Alignment.END -> when (or) {
                             Orientation.HORIZONTAL -> inGameHud.scaledHeight - SIZE
                             Orientation.VERTICAL -> inGameHud.scaledHeight - SIZE * count
                         }

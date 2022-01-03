@@ -2,10 +2,9 @@
 
 package com.deflatedpickle.smarthud.impl
 
-import com.deflatedpickle.smarthud.api.Horizontal
-import com.deflatedpickle.smarthud.api.Vertical
+import com.deflatedpickle.smarthud.api.Alignment
 
 data class Position(
-    val horizontal: Horizontal = Horizontal.CENTRE,
-    val vertical: Vertical = Vertical.CENTER,
+    val horizontal: Alignment = Alignment.CENTRE,
+    val vertical: Alignment = Alignment.CENTRE,
 )

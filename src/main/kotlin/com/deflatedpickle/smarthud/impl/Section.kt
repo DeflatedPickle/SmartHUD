@@ -9,7 +9,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 
 data class Section(
-    val position: Position,
+    val position: Position = Position(),
     val orientation: Orientation = Orientation.HORIZONTAL,
     val offset: Pair<Int, Int> = Pair(0, 0),
     val items: List<(ItemStack) -> Boolean>,
