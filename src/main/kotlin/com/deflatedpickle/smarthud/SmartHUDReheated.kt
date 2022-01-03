@@ -42,9 +42,8 @@ object SmartHUDReheated : ClientModInitializer {
     private val sections = listOf(
         Section(
             position = Position(
-                vertical = Vertical.BOTTOM
+                vertical = Vertical.BOTTOM,
             ),
-            orientation = Orientation.HORIZONTAL,
             offset = Pair(182 / 2 + SIZE / 2 + 7, 0),
             items = listOf(
                 Items.CLOCK,
@@ -53,9 +52,8 @@ object SmartHUDReheated : ClientModInitializer {
         ),
         Section(
             position = Position(
-                vertical = Vertical.BOTTOM
+                vertical = Vertical.BOTTOM,
             ),
-            orientation = Orientation.HORIZONTAL,
             offset = Pair(-182 / 2 - SIZE / 2 - 7, 0),
             items = listOf(
                 Items.ELYTRA,
@@ -64,9 +62,12 @@ object SmartHUDReheated : ClientModInitializer {
                 upon = {
                     it.getStackInHand(Hand.OFF_HAND).item != Items.AIR
                 },
-                offset = Pair(-SIZE + 1, 0)
-            )
-        )
+                offset = Pair(-SIZE + 1, 0),
+            ),
+            show = { player ->
+                player.armorItems.any { it.item == Items.ELYTRA }
+            }
+        ),
     )
 
     var enabled = true
@@ -87,6 +88,8 @@ object SmartHUDReheated : ClientModInitializer {
                     val items = s.items
                     val count = items.size
                     val dodge = s.dodge
+
+                    if (!s.show(player)) continue
 
                     var x = when (pos.horizontal) {
                         Horizontal.LEFT -> 0

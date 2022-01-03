@@ -3,6 +3,7 @@
 package com.deflatedpickle.smarthud.impl
 
 import com.deflatedpickle.smarthud.api.Orientation
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 
 data class Section(
@@ -11,4 +12,5 @@ data class Section(
     val offset: Pair<Int, Int> = Pair(0, 0),
     val items: List<Item>,
     val dodge: Dodge = Dodge(),
+    val show: (PlayerEntity) -> Boolean = { true },
 )
