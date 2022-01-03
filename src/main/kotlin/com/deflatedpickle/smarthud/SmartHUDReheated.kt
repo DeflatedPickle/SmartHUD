@@ -6,18 +6,20 @@ package com.deflatedpickle.smarthud
 
 import com.deflatedpickle.smarthud.api.Horizontal
 import com.deflatedpickle.smarthud.api.Orientation
+import com.deflatedpickle.smarthud.api.Towards
 import com.deflatedpickle.smarthud.api.Vertical
 import com.deflatedpickle.smarthud.impl.Dodge
 import com.deflatedpickle.smarthud.impl.Position
 import com.deflatedpickle.smarthud.impl.Section
-import com.deflatedpickle.smarthud.util.getSlotWithItem
-import com.deflatedpickle.smarthud.util.hasItem
 import net.fabricmc.api.ClientModInitializer
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.hud.InGameHud
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.Item
+import net.minecraft.item.ArmorItem
+import net.minecraft.item.ArrowItem
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Arm
 import net.minecraft.util.Hand
@@ -46,8 +48,8 @@ object SmartHUDReheated : ClientModInitializer {
             ),
             offset = Pair(182 / 2 + SIZE / 2 + 7, 0),
             items = listOf(
-                Items.CLOCK,
-                Items.COMPASS,
+                { it.item == Items.CLOCK },
+                { it.item == Items.COMPASS },
             )
         ),
         Section(
@@ -55,9 +57,7 @@ object SmartHUDReheated : ClientModInitializer {
                 vertical = Vertical.BOTTOM,
             ),
             offset = Pair(-182 / 2 - SIZE / 2 - 7, 0),
-            items = listOf(
-                Items.ELYTRA,
-            ),
+            items = listOf { it.item == Items.ELYTRA },
             dodge = Dodge(
                 upon = {
                     it.getStackInHand(Hand.OFF_HAND).item != Items.AIR
@@ -66,8 +66,36 @@ object SmartHUDReheated : ClientModInitializer {
             ),
             show = { player ->
                 player.armorItems.any { it.item == Items.ELYTRA }
-            }
+            },
+            towards = Towards.LEFT,
         ),
+        Section(
+            position = Position(
+                vertical = Vertical.BOTTOM,
+            ),
+            offset = Pair(-182 / 2 - SIZE / 2 - 7, 0),
+            items = listOf { it.item is ArrowItem },
+            dodge = Dodge(
+                upon = { player ->
+                    player.getStackInHand(Hand.OFF_HAND).item != Items.AIR ||
+                        player.armorItems.any { it.item == Items.ELYTRA }
+                },
+                offset = Pair(0, -SIZE + 1),
+            ),
+            towards = Towards.LEFT,
+        ),
+        Section(
+            position = Position(
+                horizontal = Horizontal.RIGHT,
+            ),
+            orientation = Orientation.VERTICAL,
+            items = listOf(
+                { it.item is ArmorItem && (it.item as ArmorItem).slotType == EquipmentSlot.HEAD },
+                { it.item is ArmorItem && (it.item as ArmorItem).slotType == EquipmentSlot.CHEST },
+                { it.item is ArmorItem && (it.item as ArmorItem).slotType == EquipmentSlot.LEGS },
+                { it.item is ArmorItem && (it.item as ArmorItem).slotType == EquipmentSlot.FEET },
+            ),
+        )
     )
 
     var enabled = true
@@ -78,7 +106,7 @@ object SmartHUDReheated : ClientModInitializer {
         KeyboardHandler.initialize()
     }
 
-    fun drawSection(inGameHud: InGameHud, drawFunc: (Int, Int, Int, Item) -> Unit) {
+    fun drawSection(inGameHud: InGameHud, drawFunc: (Int, Int, Int, ItemStack) -> Unit) {
         if (enabled) {
             MinecraftClient.getInstance().player?.let { player ->
                 for (s in sections) {
@@ -88,6 +116,7 @@ object SmartHUDReheated : ClientModInitializer {
                     val items = s.items
                     val count = items.size
                     val dodge = s.dodge
+                    val towards = s.towards
 
                     if (!s.show(player)) continue
 
@@ -95,8 +124,8 @@ object SmartHUDReheated : ClientModInitializer {
                         Horizontal.LEFT -> 0
                         Horizontal.CENTRE -> (inGameHud.scaledWidth / 2) - (SIZE / 2)
                         Horizontal.RIGHT -> when (or) {
-                            Orientation.HORIZONTAL -> inGameHud.scaledWidth - SIZE
-                            Orientation.VERTICAL -> inGameHud.scaledWidth - SIZE * count
+                            Orientation.HORIZONTAL -> inGameHud.scaledWidth - SIZE * count
+                            Orientation.VERTICAL -> inGameHud.scaledWidth - SIZE
                         }
                     }
 
@@ -117,27 +146,31 @@ object SmartHUDReheated : ClientModInitializer {
                     var collectedWidth = 0
                     var collectedHeight = 0
 
-                    for ((i, item) in items.withIndex()) {
-                        if (player.hasItem(item)) continue
+                    for (inventory in player.inventory.combinedInventory) {
+                        for ((i, stack) in inventory.withIndex()) {
+                            for (item in items) {
+                                if (!item(stack)) continue
 
-                        val x2 = when (or) {
-                            Orientation.HORIZONTAL -> x + o.first + collectedWidth.apply { collectedWidth += SIZE - 1 }
-                            Orientation.VERTICAL -> x + o.first
+                                val x2 = when (or) {
+                                    Orientation.HORIZONTAL -> x + o.first + collectedWidth.apply { collectedWidth += SIZE - 1 } * towards.direction
+                                    Orientation.VERTICAL -> x + o.first
+                                }
+
+                                val y2 = when (or) {
+                                    Orientation.HORIZONTAL -> y + o.second
+                                    Orientation.VERTICAL -> y + o.second + collectedHeight.apply { collectedHeight += SIZE - 1 } * towards.direction
+                                }
+
+                                drawFunc(
+                                    when (player.mainArm) {
+                                        Arm.LEFT -> inGameHud.scaledWidth - SIZE - 1 + x2 * -1
+                                        else -> x2
+                                    },
+                                    y2,
+                                    i, stack
+                                )
+                            }
                         }
-
-                        val y2 = when (or) {
-                            Orientation.HORIZONTAL -> y + o.second
-                            Orientation.VERTICAL -> y + o.second + collectedHeight.apply { collectedHeight += SIZE - 1 }
-                        }
-
-                        drawFunc(
-                            when (player.mainArm) {
-                                Arm.LEFT -> inGameHud.scaledWidth - SIZE - 1 + x2 * -1
-                                else -> x2
-                            },
-                            y2,
-                            i, item
-                        )
                     }
                 }
             }
@@ -157,16 +190,8 @@ object SmartHUDReheated : ClientModInitializer {
     }
 
     fun drawSmartHUDItems(inGameHud: InGameHud, playerEntity: PlayerEntity, partialTicks: Float, seed: Int) {
-        drawSection(inGameHud) { x, y, _, item ->
-            val slot = playerEntity.inventory.getSlotWithItem(item)
-
-            val stack = if (slot != -1) {
-                playerEntity.inventory.main[slot]
-            } else if (playerEntity.armorItems.any { it.item == item }) {
-                playerEntity.armorItems.first { it.item == item }
-            } else null
-
-            stack?.let {
+        drawSection(inGameHud) { x, y, _, stack ->
+            stack.let {
                 inGameHud.renderHotbarItem(
                     x + 3, y + 3,
                     partialTicks,
