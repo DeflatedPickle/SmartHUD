@@ -7,8 +7,11 @@ package com.deflatedpickle.smarthud
 import com.deflatedpickle.smarthud.api.Horizontal
 import com.deflatedpickle.smarthud.api.Orientation
 import com.deflatedpickle.smarthud.api.Vertical
+import com.deflatedpickle.smarthud.impl.Dodge
 import com.deflatedpickle.smarthud.impl.Position
+import com.deflatedpickle.smarthud.impl.Section
 import com.deflatedpickle.smarthud.util.getSlotWithItem
+import com.deflatedpickle.smarthud.util.hasItem
 import net.fabricmc.api.ClientModInitializer
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.hud.InGameHud
@@ -17,6 +20,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.util.Arm
+import net.minecraft.util.Hand
 
 @Suppress("UNUSED")
 object SmartHUDReheated : ClientModInitializer {
@@ -36,15 +40,31 @@ object SmartHUDReheated : ClientModInitializer {
     const val SIZE = 22
 
     private val sections = listOf(
-        mapOf(
-            POSITION to Position(
+        Section(
+            position = Position(
                 vertical = Vertical.BOTTOM
             ),
-            ORIENTATION to Orientation.HORIZONTAL,
-            OFFSET to Pair(182 / 2 + 7, 0),
-            ITEMS to mutableListOf(
+            orientation = Orientation.HORIZONTAL,
+            offset = Pair(182 / 2 + SIZE / 2 + 7, 0),
+            items = listOf(
                 Items.CLOCK,
                 Items.COMPASS,
+            )
+        ),
+        Section(
+            position = Position(
+                vertical = Vertical.BOTTOM
+            ),
+            orientation = Orientation.HORIZONTAL,
+            offset = Pair(-182 / 2 - SIZE / 2 - 7, 0),
+            items = listOf(
+                Items.ELYTRA,
+            ),
+            dodge = Dodge(
+                upon = {
+                    it.getStackInHand(Hand.OFF_HAND).item != Items.AIR
+                },
+                offset = Pair(-SIZE + 1, 0)
             )
         )
     )
@@ -61,38 +81,50 @@ object SmartHUDReheated : ClientModInitializer {
         if (enabled) {
             MinecraftClient.getInstance().player?.let { player ->
                 for (s in sections) {
-                    val p = s[POSITION] as Position
-                    val or = s[ORIENTATION] as Orientation
-                    val o = s[OFFSET] as Pair<Int, Int>
-                    val l = (s[ITEMS] as List<Item>).size
+                    val pos = s.position
+                    val or = s.orientation
+                    val o = s.offset
+                    val items = s.items
+                    val count = items.size
+                    val dodge = s.dodge
 
-                    val x = when (p.horizontal) {
+                    var x = when (pos.horizontal) {
                         Horizontal.LEFT -> 0
-                        Horizontal.CENTRE -> (inGameHud.scaledWidth / 2)
+                        Horizontal.CENTRE -> (inGameHud.scaledWidth / 2) - (SIZE / 2)
                         Horizontal.RIGHT -> when (or) {
                             Orientation.HORIZONTAL -> inGameHud.scaledWidth - SIZE
-                            Orientation.VERTICAL -> inGameHud.scaledWidth - SIZE * l
+                            Orientation.VERTICAL -> inGameHud.scaledWidth - SIZE * count
                         }
                     }
 
-                    val y = when (p.vertical) {
+                    var y = when (pos.vertical) {
                         Vertical.TOP -> 0
-                        Vertical.CENTER -> (inGameHud.scaledHeight / 2)
+                        Vertical.CENTER -> (inGameHud.scaledHeight / 2) - (SIZE / 2)
                         Vertical.BOTTOM -> when (or) {
                             Orientation.HORIZONTAL -> inGameHud.scaledHeight - SIZE
-                            Orientation.VERTICAL -> inGameHud.scaledHeight - SIZE * l
+                            Orientation.VERTICAL -> inGameHud.scaledHeight - SIZE * count
                         }
                     }
 
-                    for ((i, stack) in (s[ITEMS] as List<Item>).withIndex()) {
+                    if (dodge.upon(player)) {
+                        x += dodge.offset.first
+                        y += dodge.offset.second
+                    }
+
+                    var collectedWidth = 0
+                    var collectedHeight = 0
+
+                    for ((i, item) in items.withIndex()) {
+                        if (player.hasItem(item)) continue
+
                         val x2 = when (or) {
-                            Orientation.HORIZONTAL -> x + o.first + (SIZE - 1) * i
+                            Orientation.HORIZONTAL -> x + o.first + collectedWidth.apply { collectedWidth += SIZE - 1 }
                             Orientation.VERTICAL -> x + o.first
                         }
 
                         val y2 = when (or) {
                             Orientation.HORIZONTAL -> y + o.second
-                            Orientation.VERTICAL -> y + o.second + (SIZE - 1) * i
+                            Orientation.VERTICAL -> y + o.second + collectedHeight.apply { collectedHeight += SIZE - 1 }
                         }
 
                         drawFunc(
@@ -100,7 +132,8 @@ object SmartHUDReheated : ClientModInitializer {
                                 Arm.LEFT -> inGameHud.scaledWidth - SIZE - 1 + x2 * -1
                                 else -> x2
                             },
-                            y2, i, stack
+                            y2,
+                            i, item
                         )
                     }
                 }
@@ -124,12 +157,18 @@ object SmartHUDReheated : ClientModInitializer {
         drawSection(inGameHud) { x, y, _, item ->
             val slot = playerEntity.inventory.getSlotWithItem(item)
 
-            if (slot != -1) {
+            val stack = if (slot != -1) {
+                playerEntity.inventory.main[slot]
+            } else if (playerEntity.armorItems.any { it.item == item }) {
+                playerEntity.armorItems.first { it.item == item }
+            } else null
+
+            stack?.let {
                 inGameHud.renderHotbarItem(
                     x + 3, y + 3,
                     partialTicks,
                     playerEntity,
-                    playerEntity.inventory.main[slot],
+                    stack,
                     seed,
                 )
             }
