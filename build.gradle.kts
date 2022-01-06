@@ -37,6 +37,10 @@ val mod_environment: String by project
 val mod_version: String by project
 val loom_version: String by project
 
+base {
+    archivesBaseName = archives_base_name
+}
+
 version = project.property("mod_version")!!
 group = project.property("maven_group")!!
 
@@ -190,7 +194,7 @@ fun DependencyHandlerScope.includeTransitive(
     checkedDependencies: MutableSet<ResolvedDependency> = HashSet()
 ) {
     dependencies.forEach {
-        if (checkedDependencies.contains(it) || (it.moduleGroup == "org.jetbrains.kotlin" && it.moduleName.startsWith("kotlin-stdlib"))) return@forEach
+        if (checkedDependencies.contains(it)/* || (it.moduleGroup == "org.jetbrains.kotlin" && it.moduleName.startsWith("kotlin-stdlib"))*/) return@forEach
 
         if (fabricLanguageKotlinDependency.children.any { kotlinDep -> kotlinDep.name == it.name }) {
             println("Skipping -> ${it.name}")

@@ -2,9 +2,11 @@
 
 package com.deflatedpickle.smarthud.impl
 
-import com.deflatedpickle.smarthud.api.Inventory
+import com.deflatedpickle.smarthud.api.stub.Inventory
 import com.deflatedpickle.smarthud.api.Orientation
 import com.deflatedpickle.smarthud.api.Towards
+import com.deflatedpickle.smarthud.impl.stub.Player
+import com.deflatedpickle.smarthud.impl.stub.Stack
 
 data class Section(
     /**

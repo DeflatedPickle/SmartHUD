@@ -5,7 +5,6 @@
 package com.deflatedpickle.smarthud
 
 import com.deflatedpickle.smarthud.api.Alignment
-import com.deflatedpickle.smarthud.api.Inventory
 import com.deflatedpickle.smarthud.api.Orientation
 import com.deflatedpickle.smarthud.impl.Section
 import com.deflatedpickle.smarthud.util.toPlayer
@@ -19,7 +18,6 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Arm
-import net.minecraft.util.collection.DefaultedList
 
 @Suppress("UNUSED")
 object SmartHUDReheated : ClientModInitializer {
@@ -91,15 +89,9 @@ object SmartHUDReheated : ClientModInitializer {
 
                     val collectedKinds = mutableMapOf<Item, Int>()
 
-                    val inventories = mutableListOf<DefaultedList<ItemStack>>().apply {
+                    val inventories = mutableListOf<List<ItemStack>>().apply {
                         for (i in s.inventories) {
-                            add(
-                                when (i) {
-                                    Inventory.MAIN -> player.inventory.main
-                                    Inventory.ARMOUR -> player.inventory.armor
-                                    Inventory.OFFHAND -> player.inventory.offHand
-                                }
-                            )
+                            add(i.toMinecraft(player))
                         }
                     }
 
@@ -110,7 +102,7 @@ object SmartHUDReheated : ClientModInitializer {
                                 if (!item(stack.toStack())) continue
                                 collectedKinds.putIfAbsent(stack.item, 0)
                                 if (s.limit != -1 && collectedKinds[stack.item]!! >= s.limit) continue
-                                if (inventory.size == 36 && inventory.indexOf(stack) <= 9) continue
+                                // if (inventory.size == 36 && inventory.indexOf(stack) < 9) continue
 
                                 collectedKinds[stack.item] = collectedKinds[stack.item]!! + 1
 

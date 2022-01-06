@@ -35,8 +35,10 @@ object Scripting {
             "com.deflatedpickle.smarthud.SmartHUDReheated.DISTANCE",
             "com.deflatedpickle.smarthud.SmartHUDReheated.SIZE",
             "com.deflatedpickle.smarthud.SmartHUDReheated.BORDER",
+            "com.deflatedpickle.smarthud.MinecraftAssets.*",
             "com.deflatedpickle.smarthud.api.*",
             "com.deflatedpickle.smarthud.impl.*",
+            "com.deflatedpickle.smarthud.util.*",
         )
     }
 
