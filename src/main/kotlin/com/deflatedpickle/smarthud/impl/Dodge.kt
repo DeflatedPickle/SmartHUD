@@ -2,9 +2,9 @@
 
 package com.deflatedpickle.smarthud.impl
 
-import net.minecraft.entity.player.PlayerEntity
+import com.deflatedpickle.smarthud.impl.stub.Player
 
 data class Dodge(
-    val upon: (PlayerEntity) -> Boolean = { false },
+    val upon: (Player) -> Boolean = { false },
     val offset: Pair<Int, Int> = Pair(0, 0),
 )
