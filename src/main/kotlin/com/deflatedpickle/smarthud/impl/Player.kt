@@ -2,7 +2,9 @@
 
 package com.deflatedpickle.smarthud.impl
 
-data class Dodge(
-    val upon: (Player) -> Boolean = { false },
-    val offset: Pair<Int, Int> = Pair(0, 0),
+import java.util.UUID
+
+data class Player(
+    val id: UUID,
+    val name: String,
 )

@@ -8,6 +8,8 @@ import com.deflatedpickle.smarthud.api.Alignment
 import com.deflatedpickle.smarthud.api.Inventory
 import com.deflatedpickle.smarthud.api.Orientation
 import com.deflatedpickle.smarthud.impl.Section
+import com.deflatedpickle.smarthud.util.toPlayer
+import com.deflatedpickle.smarthud.util.toStack
 import net.fabricmc.api.ClientModInitializer
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.hud.InGameHud
@@ -15,18 +17,9 @@ import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.util.Arm
 import net.minecraft.util.collection.DefaultedList
-import java.io.File
-import kotlin.script.experimental.api.ResultValue
-import kotlin.script.experimental.api.ResultWithDiagnostics
-import kotlin.script.experimental.api.ScriptCompilationConfiguration
-import kotlin.script.experimental.api.ScriptEvaluationConfiguration
-import kotlin.script.experimental.api.defaultImports
-import kotlin.script.experimental.host.toScriptSource
-import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
-import kotlin.script.experimental.jvm.jvm
-import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
 @Suppress("UNUSED")
 object SmartHUDReheated : ClientModInitializer {
@@ -38,8 +31,9 @@ object SmartHUDReheated : ClientModInitializer {
 
     const val DISTANCE = 7
     const val SIZE = 22
+    const val BORDER = 3
 
-    private lateinit var sections: List<Section>
+    lateinit var sections: List<Section>
 
     var enabled = true
 
@@ -48,39 +42,11 @@ object SmartHUDReheated : ClientModInitializer {
 
         KeyboardHandler.initialize()
 
-        val file = File("${System.getProperty("user.dir")}/config/smarthud.kts")
-
-        val cc = ScriptCompilationConfiguration {
-            jvm {
-                dependenciesFromCurrentContext(
-                    wholeClasspath = true
-                )
-            }
-            defaultImports(
-                "com.deflatedpickle.smarthud.SmartHUDReheated.SIZE",
-                "com.deflatedpickle.smarthud.api.*",
-                "com.deflatedpickle.smarthud.impl.*",
-            )
+        if (!Scripting.file.exists()) {
+            Scripting.createConfig()
         }
 
-        val ec = ScriptEvaluationConfiguration {
-        }
-
-        val eval = BasicJvmScriptingHost().eval(file.toScriptSource(), cc, ec)
-
-        when (eval) {
-            is ResultWithDiagnostics.Success -> {
-                when (val result = eval.value.returnValue) {
-                    is ResultValue.Value -> {
-                        sections = result.value as List<Section>
-                    }
-                    is ResultValue.Unit -> TODO()
-                    is ResultValue.Error -> TODO()
-                    ResultValue.NotEvaluated -> TODO()
-                }
-            }
-            is ResultWithDiagnostics.Failure -> {}
-        }
+        Scripting.reloadConfig()
     }
 
     fun drawSection(inGameHud: InGameHud, drawFunc: (Int, Int, Int, ItemStack) -> Unit) {
@@ -95,7 +61,7 @@ object SmartHUDReheated : ClientModInitializer {
                     val dodge = s.dodge
                     val towards = s.towards
 
-                    if (!s.show(player)) continue
+                    if (!s.show(player.toPlayer())) continue
 
                     var x = when (pos.horizontal) {
                         Alignment.START -> 0
@@ -115,7 +81,7 @@ object SmartHUDReheated : ClientModInitializer {
                         }
                     }
 
-                    if (dodge.upon(player)) {
+                    if (dodge.upon(player.toPlayer())) {
                         x += dodge.offset.first
                         y += dodge.offset.second
                     }
@@ -140,7 +106,8 @@ object SmartHUDReheated : ClientModInitializer {
                     for (inventory in inventories) {
                         for ((i, stack) in inventory.withIndex()) {
                             for (item in items) {
-                                if (!item(stack)) continue
+                                if (stack.item == Items.AIR) continue
+                                if (!item(stack.toStack())) continue
                                 collectedKinds.putIfAbsent(stack.item, 0)
                                 if (s.limit != -1 && collectedKinds[stack.item]!! >= s.limit) continue
                                 if (inventory.size == 36 && inventory.indexOf(stack) <= 9) continue
@@ -189,7 +156,7 @@ object SmartHUDReheated : ClientModInitializer {
         drawSection(inGameHud) { x, y, _, stack ->
             stack.let {
                 inGameHud.renderHotbarItem(
-                    x + 3, y + 3,
+                    x + BORDER, y + BORDER,
                     partialTicks,
                     playerEntity,
                     stack,

@@ -146,7 +146,7 @@ spotless {
     }
 
     kotlin {
-        ktlint(ktlint_version)
+        // ktlint(ktlint_version)
 
         licenseHeader("/* ${expandLicense(license_header)} */\n\n")
     }

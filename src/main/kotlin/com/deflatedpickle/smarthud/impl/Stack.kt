@@ -2,7 +2,7 @@
 
 package com.deflatedpickle.smarthud.impl
 
-data class Dodge(
-    val upon: (Player) -> Boolean = { false },
-    val offset: Pair<Int, Int> = Pair(0, 0),
+data class Stack(
+    val name: String,
+    val count: Int,
 )
