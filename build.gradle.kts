@@ -62,7 +62,7 @@ dependencies {
     mappings("net.fabricmc:yarn:${minecraftVersion()}+${yarn_mappings}:v2")
     modImplementation("net.fabricmc:fabric-loader:${loader_version}")
 
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${fabric_version}+${minecraftVersionShort()}")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${fabric_version}+${minecraftVersion()}")
     modImplementation("net.fabricmc:fabric-language-kotlin:${fabric_kotlin_version}+kotlin.${kotlin_version}")
 
     // https://fabricmc.net/wiki/documentation:libraries
