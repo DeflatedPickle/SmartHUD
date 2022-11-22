@@ -11,7 +11,6 @@ import com.deflatedpickle.smarthud.api.Towards
 import com.deflatedpickle.smarthud.impl.Dodge
 import com.deflatedpickle.smarthud.impl.Position
 import com.deflatedpickle.smarthud.impl.Section
-import net.fabricmc.api.ClientModInitializer
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.hud.InGameHud
 import net.minecraft.client.util.math.MatrixStack
@@ -25,6 +24,8 @@ import net.minecraft.item.Items
 import net.minecraft.util.Arm
 import net.minecraft.util.Hand
 import net.minecraft.util.collection.DefaultedList
+import org.quiltmc.loader.api.ModContainer
+import org.quiltmc.qsl.base.api.entrypoint.client.ClientModInitializer
 
 @Suppress("UNUSED")
 object SmartHUDReheated : ClientModInitializer {
@@ -113,7 +114,7 @@ object SmartHUDReheated : ClientModInitializer {
 
     var enabled = true
 
-    override fun onInitializeClient() {
+    override fun onInitializeClient(mod: ModContainer) {
         println(listOf(MOD_ID, NAME, GROUP, AUTHOR, VERSION))
 
         KeyboardHandler.initialize()
