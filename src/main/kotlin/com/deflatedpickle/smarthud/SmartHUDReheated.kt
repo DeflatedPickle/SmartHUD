@@ -1,6 +1,6 @@
 /* Copyright (c) 2021-2022 ChloeDawn,DeflatedPickle under the APACHE-2.0 license */
 
-@file:Suppress("UNCHECKED_CAST", "MemberVisibilityCanBePrivate")
+@file:Suppress("MemberVisibilityCanBePrivate")
 
 package com.deflatedpickle.smarthud
 
