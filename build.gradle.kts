@@ -55,7 +55,7 @@ val includeImplementation: Configuration by configurations.creating {
 }
 
 dependencies {
-    includeImplementation("org.jetbrains.kotlin:kotlin-scripting-jvm:1.6.0")
+    includeImplementation("org.jetbrains.kotlin:kotlin-scripting-jvm:1.7.21")
     includeImplementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:1.6.0")
 
     minecraft("com.mojang:minecraft:${minecraftVersion()}")
